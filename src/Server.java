@@ -73,7 +73,7 @@ public class Server implements Runnable {
                 out = new PrintWriter(client.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(client.getInputStream()));
                 out.println("Please enter a nickname: ");
-                String nickname = in.readLine(); // TODO: class to handle username (input constraints)
+                String nickname = in.readLine(); // add constraints!
                 System.out.println(nickname + " connected!");
                 broadcast(nickname + " joined the chat!");
                 String message;

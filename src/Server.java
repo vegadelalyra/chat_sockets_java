@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 public class Server implements Runnable {
     private static ArrayList<ConnectionHandler> connections;
     private static ServerSocket server;
+    private static ExecutorService pool;
     private static boolean done;
     private static final int port = 9_999;
 
@@ -23,15 +24,15 @@ public class Server implements Runnable {
     public void run() {
         try {
             server = new ServerSocket(port);
-            try (ExecutorService pool = Executors.newCachedThreadPool()) {
-                while (!done) {
-                    Socket client = server.accept();
-                    ConnectionHandler handler = new ConnectionHandler(client);
-                    connections.add(handler);
-                    pool.execute(handler);
-                }
+            pool = Executors.newCachedThreadPool();
+            System.out.println("Socket server running on port " + port);
+            while (!done) {
+                Socket client = server.accept();
+                ConnectionHandler handler = new ConnectionHandler(client);
+                connections.add(handler);
+                pool.execute(handler);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             shutdown();
         }
     }
@@ -47,6 +48,7 @@ public class Server implements Runnable {
     public static void shutdown() {
         if (!server.isClosed()) {
             done = true;
+            pool.shutdown();
             try {
                 server.close();
                 for (ConnectionHandler ch : connections) {
@@ -90,6 +92,7 @@ public class Server implements Runnable {
                         }
                     } else if (message.startsWith("/quit")) {
                         broadcast(nickname + " left the chat!");
+                        System.out.println(nickname + " disconnected.");
                         shutdown();
                     } else {
                         broadcast(nickname + ": " + message);
@@ -117,7 +120,6 @@ public class Server implements Runnable {
 
     public static void main(String[] args) {
         Server server = new Server();
-        System.out.println("Socket server running on port " + port);
         server.run();
     }
 }
